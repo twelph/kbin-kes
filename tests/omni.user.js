@@ -28,10 +28,16 @@ const modCss = `
 }
 `
 const listCss = `
+@media (max-width: 576px) {
+    #myUL {
+        width: 100% !important
+    }
+}
 #myUL {
     list-style-type: none;
     padding: 50px;
     margin: 0;
+    width: 30%
 }
 #myUL li{
     border-bottom: 1px solid var(--kbin-vote-text-color);
