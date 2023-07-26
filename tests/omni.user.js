@@ -11,7 +11,6 @@
 // @grant	GM_xmlhttpRequest
 // ==/UserScript==
 
-//TODO: test/handle y overflow scroll
 //TODO: if mod is on, cache subs and set listener
 //TODO: GM. API xhr request
 
@@ -30,14 +29,19 @@ const modCss = `
 const listCss = `
 @media (max-width: 576px) {
     #myUL {
-        width: 100% !important
+        width: fit-content !important
     }
 }
+#innerBox {
+    height: 80%;
+    overflow-y: scroll;
+}
 #myUL {
+    height: 80%;
     list-style-type: none;
     padding: 50px;
     margin: 0;
-    width: 30%
+    width: fit-content;
 }
 #myUL li{
     border-bottom: 1px solid var(--kbin-vote-text-color);
@@ -67,9 +71,25 @@ const listCss = `
 `
 GM_addStyle(listCss)
 GM_addStyle(modCss)
+const user = document.querySelector('.login');
+const username = user.href.split('/')[4];
 
+document.addEventListener('keydown', (e) =>{
+        e.preventDefault();
+    if (e.keyCode === 9) {
+        const exists = document.querySelector('.kes-subs-modal')
+        console.log(exists)
+        if (exists) {
+            exists.remove();
+            return
+        } else {
+           prepare();
+        }
+    }
+
+});
 function prepare () {
-    genericXMLRequest("https://kbin.social/u/shazbot/subscriptions", build)
+    genericXMLRequest(`https://kbin.social/u/${username}/subscriptions`, build)
 }
 function build (response) {
     let parser = new DOMParser();
@@ -100,11 +120,11 @@ function omni (subs) {
     let pos = 0
     search.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
-        case 9: {
-            e.preventDefault();
-            d.remove();
-            break;
-        }
+     //   case 9: {
+     //       e.preventDefault();
+     //       d.remove();
+     //       break;
+     //   }
         case 40: {
             const um = document.querySelector('#myUL')
             const m = Array.from(um.querySelectorAll('li'))
@@ -186,7 +206,9 @@ function omni (subs) {
     });
 
     entryholder.id = 'myUL'
-    entryholder.appendChild(search);
+    const innerholder = document.createElement('div')
+    innerholder.id = 'innerBox'
+    innerholder.appendChild(search);
     for (let i = 0; i <subs.length; ++i) {
         let outerA = document.createElement('a')
         let entry = document.createElement('li');
@@ -196,10 +218,11 @@ function omni (subs) {
         entry.innerText = subs[i];
         outerA.appendChild(entry)
         outerA.href = 'https://kbin.social/m/' + subs[i]
-        entryholder.appendChild(outerA);
+        innerholder.appendChild(outerA);
     }
+    entryholder.appendChild(innerholder)
     d.appendChild(entryholder)
-    entryholder.addEventListener('mouseover', (e) => {
+    innerholder.addEventListener('mouseover', (e) => {
         const o = e.target.parentNode.parentNode
         const old = o.querySelector('.kes-subs-active')
         if (e.target.tagName === "LI") {
@@ -210,4 +233,3 @@ function omni (subs) {
     document.body.appendChild(d)
     document.querySelector("#myS").focus();
 }
-prepare();
