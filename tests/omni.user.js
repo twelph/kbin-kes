@@ -16,6 +16,8 @@
 
 const modCss = `
 .kes-subs-modal {
+    display: flex;
+    justify-content: center;
     position: fixed;
     z-index: 100;
     left: 0;
@@ -33,6 +35,7 @@ const listCss = `
     }
 }
 #innerBox {
+    margin-top: 20%;
     height: 80%;
     overflow-y: scroll;
 }
