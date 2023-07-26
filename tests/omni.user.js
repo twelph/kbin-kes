@@ -75,8 +75,8 @@ const user = document.querySelector('.login');
 const username = user.href.split('/')[4];
 
 document.addEventListener('keydown', (e) =>{
-        e.preventDefault();
     if (e.keyCode === 9) {
+        e.preventDefault();
         const exists = document.querySelector('.kes-subs-modal')
         console.log(exists)
         if (exists) {
