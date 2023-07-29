@@ -104,6 +104,8 @@ document.addEventListener('keydown', (e) =>{
 function prepare (username) {
     genericXMLRequest(`https://kbin.social/u/${username}/subscriptions`, build)
 }
+
+//magazine-inline stretched-link
 function build (response) {
     let parser = new DOMParser();
     let notificationsXML = parser.parseFromString(response.responseText, "text/html");
