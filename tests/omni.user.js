@@ -37,7 +37,7 @@ const modCss = `
 `
 const listCss = `
 @media (max-width: 576px) {
-    #myUL {
+    #kes-omni-list {
         width: fit-content !important
     }
 }
@@ -46,14 +46,14 @@ const listCss = `
     height: 80%;
     overflow-y: scroll;
 }
-#myUL {
+#kes-omni-list {
     height: 80%;
     list-style-type: none;
     padding: 50px;
     margin: 0;
     width: fit-content;
 }
-#myUL li{
+#kes-omni-list li{
     border-bottom: 1px solid var(--kbin-vote-text-color);
     border-top: 1px solid var(--kbin-vote-text-color);
     margin-top: -1px; /* Prevent double borders */
@@ -68,10 +68,10 @@ const listCss = `
 .kes-subs-active {
     background-color: var(--kbin-primary-color) !important;
 }
-#myS:focus {
+#kes-omni-search:focus {
     outline: none
 }
-#myS {
+#kes-omni-search {
     width: 100%;
     margin-bottom: 1px;
     background-color: var(--kbin-vote-text-color);
@@ -82,8 +82,6 @@ const listCss = `
 
 GM_addStyle(listCss)
 GM_addStyle(modCss)
-
-//TODO: if not logged in, get default mags list
 
 document.addEventListener('keydown', (e) =>{
     //TODO: get key from settings
@@ -100,21 +98,35 @@ document.addEventListener('keydown', (e) =>{
         } else {
             const user = document.querySelector('.login');
             const username = user.href.split('/')[4];
-            prepare(username);
+            prepareLogin(username);
         }
     }
 
 });
-function prepare (username) {
-    genericXMLRequest(`https://kbin.social/u/${username}/subscriptions`, build)
+function prepareLogin (username) {
+    let url
+    if (username) {
+        url = `https://kbin.social/u/${username}/subscriptions`
+    } else {
+        url = 'https://kbin.social/magazines'
+    }
+    genericXMLRequest(url, parseMags)
 }
-
-//magazine-inline stretched-link
-function build (response) {
+function parseMags (response) {
+    let links
     let parser = new DOMParser();
     let notificationsXML = parser.parseFromString(response.responseText, "text/html");
-    const col = notificationsXML.querySelector('.magazines-columns')
-    const links = col.querySelectorAll('.stretched-link')
+    console.log(notificationsXML)
+    if (notificationsXML.title === "Magazines - kbin.social") {
+        const magsTable = document.querySelector('.magazines.table-responsive')
+        links = magsTable.querySelectorAll('.magazine-inline')
+    } else {
+        const col = notificationsXML.querySelector('.magazines-columns')
+        links = col.querySelectorAll('.stretched-link')
+    }
+    alphaSort(links);
+}
+function alphaSort (links) {
     const clean = []
     links.forEach((link) => {
         clean.push(link.innerText)
@@ -123,13 +135,12 @@ function build (response) {
     omni(clean);
 }
 function updateVisible () {
-    const um = document.querySelector('#myUL')
-    const m = Array.from(um.querySelectorAll('li'))
+    let pos
     const vis = []
     $("#kes-omni li:visible").each(function () {
         vis.push($(this)[0])
     })
-    for (j = 0; j < vis.length; ++j) {
+    for (let j = 0; j < vis.length; ++j) {
         if (vis[j].className === kesActive) {
             pos = j
         }
@@ -146,9 +157,9 @@ function makeActive (name) {
     name.classList.add(c);
 }
 function omni (subs) {
-    const d = document.createElement('div')
-    d.className = "kes-subs-modal"
-    d.addEventListener('click', (e) =>{
+    const kesModal = document.createElement('div')
+    kesModal.className = "kes-subs-modal"
+    kesModal.addEventListener('click', (e) =>{
         if ((e.target.tagName === "UL") || (e.target.tagName === "DIV")) {
             const torem = document.querySelector('.kes-subs-modal')
             torem.remove();
@@ -157,9 +168,8 @@ function omni (subs) {
     const entryholder = document.createElement('ul')
     const search = document.createElement('input')
     search.type = "search"
-    search.id = "myS"
+    search.id = "kes-omni-search"
     search.setAttribute
-    let pos = 0
     search.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
         case 40: {
@@ -191,7 +201,7 @@ function omni (subs) {
     search.addEventListener("keyup", (e) => {
         switch (e.keyCode) {
         case 13: {
-            const act = document.querySelector("#myUL li.kes-subs-active")
+            const act = document.querySelector("#kes-omni-list li.kes-subs-active")
             const dest = act.textContent
             window.location = 'https://kbin.social/m/' + dest
             break;
@@ -226,18 +236,23 @@ function omni (subs) {
                     makeInactive(visi[k])
                 }
             }
-            pos = 0
         }
         }
     });
 
-    entryholder.id = 'myUL'
+    entryholder.id = 'kes-omni-list'
     const innerholder = document.createElement('div')
     innerholder.id = 'kes-omni'
-    const label = document.createElement('div')
-    label.innerText = 'logged in'
-    label.id = 'kes-omni-warning'
-    innerholder.appendChild(label);
+
+    const user = document.querySelector('.login');
+    const username = user.href.split('/')[4];
+    if (!username) {
+        const label = document.createElement('div')
+        label.innerText = 'not logged in'
+        label.id = 'kes-omni-warning'
+        innerholder.appendChild(label);
+    }
+
     innerholder.appendChild(search);
     for (let i = 0; i <subs.length; ++i) {
         let outerA = document.createElement('a')
@@ -251,7 +266,7 @@ function omni (subs) {
         innerholder.appendChild(outerA);
     }
     entryholder.appendChild(innerholder)
-    d.appendChild(entryholder)
+    kesModal.appendChild(entryholder)
     innerholder.addEventListener('mouseover', (e) => {
         const o = e.target.parentNode.parentNode
         const old = o.querySelector('.' + kesActive)
@@ -260,6 +275,6 @@ function omni (subs) {
             makeActive(e.target)
         }
     });
-    document.body.appendChild(d)
-    document.querySelector("#myS").focus();
+    document.body.appendChild(kesModal)
+    document.querySelector("#kes-omni-search").focus();
 }
