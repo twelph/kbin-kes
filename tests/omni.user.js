@@ -7,12 +7,15 @@
 // @match        https://kbin.social/*
 // @require      https://github.com/aclist/kbin-kes/raw/testing/helpers/safegm.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kbin.social
+// @require      http://code.jquery.com/jquery-3.4.1.min.js
 // @grant	GM_addStyle
 // @grant	GM_xmlhttpRequest
 // ==/UserScript==
 
 //TODO: if mod is on, cache subs and set listener
 //TODO: GM. API xhr request
+
+const kesActive = 'kes-subs-active'
 
 const modCss = `
 .kes-subs-modal {
@@ -34,7 +37,7 @@ const listCss = `
         width: fit-content !important
     }
 }
-#innerBox {
+#kes-omni {
     margin-top: 20%;
     height: 80%;
     overflow-y: scroll;
@@ -72,26 +75,33 @@ const listCss = `
     padding: 5px;
 }
 `
+
 GM_addStyle(listCss)
 GM_addStyle(modCss)
-const user = document.querySelector('.login');
-const username = user.href.split('/')[4];
+
+//TODO: if not logged in, get default mags list
 
 document.addEventListener('keydown', (e) =>{
+    //TODO: get key from settings
+    //const settings = getModSettings('omni')
+    //const key = omni.meta
+    //const map = { Tab: 9, Backtick: X, Equals: X }
+    //if (e.keyCode === map.key)
     if (e.keyCode === 9) {
         e.preventDefault();
         const exists = document.querySelector('.kes-subs-modal')
-        console.log(exists)
         if (exists) {
             exists.remove();
             return
         } else {
-           prepare();
+            const user = document.querySelector('.login');
+            const username = user.href.split('/')[4];
+            prepare(username);
         }
     }
 
 });
-function prepare () {
+function prepare (username) {
     genericXMLRequest(`https://kbin.social/u/${username}/subscriptions`, build)
 }
 function build (response) {
@@ -105,6 +115,29 @@ function build (response) {
         clean.sort().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     });
     omni(clean);
+}
+function updateVisible () {
+    const um = document.querySelector('#myUL')
+    const m = Array.from(um.querySelectorAll('li'))
+    const vis = []
+    $("#kes-omni li:visible").each(function() {
+        vis.push($(this)[0])
+    })
+    for (j = 0; j < vis.length; ++j) {
+        if (vis[j].className === kesActive) {
+            pos = j
+        }
+    }
+    makeInactive(vis[pos]);
+    return [vis, pos]
+}
+function makeInactive(name){
+    const c = kesActive;
+    name.classList.remove(c);
+}
+function makeActive(name){
+    const c = kesActive;
+    name.classList.add(c);
 }
 function omni (subs) {
     const d = document.createElement('div')
@@ -123,46 +156,30 @@ function omni (subs) {
     let pos = 0
     search.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
-     //   case 9: {
-     //       e.preventDefault();
-     //       d.remove();
-     //       break;
-     //   }
-        case 40: {
-            const um = document.querySelector('#myUL')
-            const m = Array.from(um.querySelectorAll('li'))
-            const vis = []
-            for (j = 0 ; j < m.length; ++j) {
-                if (m[j].style.display !== 'none') {
-                    vis.push(m[j])
+            case 40: {
+                e.preventDefault();
+                let packed = updateVisible();
+                let vis = packed[0]
+                let pos = packed[1]
+                pos = ++pos
+                if (pos >= vis.length) {
+                    pos = 0
                 }
+                makeActive(vis[pos]);
+                break;
             }
-            vis[pos].classList.remove("kes-subs-active")
-            pos = ++pos
-            if (pos >= vis.length) {
-                pos = 0
-            }
-            vis[pos].classList.add("kes-subs-active")
-            break;
-        }
-        case 38: {
-            e.preventDefault();
-            const um = document.querySelector('#myUL')
-            const m = Array.from(um.querySelectorAll('li'))
-            const vis = []
-            for (j = 0 ; j < m.length; ++j) {
-                if (m[j].style.display !== 'none') {
-                    vis.push(m[j])
+            case 38: {
+                e.preventDefault();
+                let packed = updateVisible();
+                let vis = packed[0]
+                let pos = packed[1]
+                pos = --pos
+                if (pos < 0) {
+                    pos = (vis.length - 1)
                 }
+                makeActive(vis[pos])
+                break;
             }
-            vis[pos].classList.remove("kes-subs-active")
-            pos = --pos
-            if (pos < 0) {
-                pos = (vis.length - 1)
-            }
-            vis[pos].classList.add("kes-subs-active")
-            break;
-        }
         }
     });
     search.addEventListener("keyup", (e) => {
@@ -193,14 +210,14 @@ function omni (subs) {
                     VB[i].style.display = "";
                 } else {
                     VB[i].style.display= "none";
-                    VB[i].classList.remove('kes-subs-active')
+                    makeInactive(VB[i])
                 }
             }
-            for (let k = 0; k< visi.length; ++k) {
+            for (let k = 0; k < visi.length; ++k) {
                 if (k === 0) {
-                    visi[k].classList.add('kes-subs-active')
+                    makeActive(visi[k])
                 } else {
-                    visi[k].classList.remove('kes-subs-active')
+                    makeInactive(visi[k])
                 }
             }
             pos = 0
@@ -210,13 +227,13 @@ function omni (subs) {
 
     entryholder.id = 'myUL'
     const innerholder = document.createElement('div')
-    innerholder.id = 'innerBox'
+    innerholder.id = 'kes-omni'
     innerholder.appendChild(search);
     for (let i = 0; i <subs.length; ++i) {
         let outerA = document.createElement('a')
         let entry = document.createElement('li');
         if (i === 0) {
-            entry.className = 'kes-subs-active'
+            entry.className = kesActive
         }
         entry.innerText = subs[i];
         outerA.appendChild(entry)
@@ -227,10 +244,10 @@ function omni (subs) {
     d.appendChild(entryholder)
     innerholder.addEventListener('mouseover', (e) => {
         const o = e.target.parentNode.parentNode
-        const old = o.querySelector('.kes-subs-active')
+        const old = o.querySelector('.' + kesActive)
         if (e.target.tagName === "LI") {
-            old.classList.remove("kes-subs-active")
-            e.target.classList.add('kes-subs-active')
+            makeInactive(old)
+            makeActive(e.target)
         }
     });
     document.body.appendChild(d)
