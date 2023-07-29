@@ -29,7 +29,8 @@ const modCss = `
     overflow-y: scroll;
 }
 #kes-omni-warning {
-    background-color: red;
+    background-color: var(--kbin-alert-danger-text-color);
+    color: var(--kbin-link-hover-color);
     text-align: center;
 }
 .kes-subs-modal {
@@ -71,7 +72,7 @@ const listCss = `
     padding: 5px;
     text-decoration: none;
     font-size: 18px;
-    border: 1px solid gray;
+    border: 1px solid var(--kbin-button-primary-bg);
     display: block;
 }
 .kes-subs-active {
@@ -82,7 +83,6 @@ const listCss = `
 }
 #kes-omni-search {
     width: 100%;
-    margin-bottom: 1px;
     background-color: var(--kbin-vote-text-color);
     color: var(--kbin-bg);
     padding: 5px;
