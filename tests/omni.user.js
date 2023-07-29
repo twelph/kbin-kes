@@ -14,6 +14,7 @@
 
 //TODO: if mod is on, cache subs and set listener
 //TODO: GM. API xhr request
+//scroll elements into view
 
 const kesActive = 'kes-subs-active'
 
@@ -114,22 +115,23 @@ function prepareLogin (username) {
 }
 function parseMags (response) {
     let links
+    let mags
     let parser = new DOMParser();
     let notificationsXML = parser.parseFromString(response.responseText, "text/html");
     console.log(notificationsXML)
     if (notificationsXML.title === "Magazines - kbin.social") {
-        const magsTable = document.querySelector('.magazines.table-responsive')
-        links = magsTable.querySelectorAll('.magazine-inline')
+        mags = notificationsXML.querySelector('.magazines.table-responsive')
+        links = mags.querySelectorAll('.stretched-link')
     } else {
-        const col = notificationsXML.querySelector('.magazines-columns')
-        links = col.querySelectorAll('.stretched-link')
+        mags = notificationsXML.querySelector('.magazines-columns')
     }
+    links = mags.querySelectorAll('.stretched-link')
     alphaSort(links);
 }
 function alphaSort (links) {
     const clean = []
     links.forEach((link) => {
-        clean.push(link.innerText)
+        clean.push(link.href.split('/')[4])
         clean.sort().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     });
     omni(clean);
@@ -182,6 +184,7 @@ function omni (subs) {
                 pos = 0
             }
             makeActive(vis[pos]);
+            //vis[pos].focus();
             break;
         }
         case 38: {
@@ -194,6 +197,7 @@ function omni (subs) {
                 pos = (vis.length - 1)
             }
             makeActive(vis[pos])
+            //vis[pos].focus();
             break;
         }
         }
