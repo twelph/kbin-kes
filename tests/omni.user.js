@@ -18,6 +18,10 @@
 const kesActive = 'kes-subs-active'
 
 const modCss = `
+#kes-omni-warning {
+    background-color: red;
+    text-align: center;
+}
 .kes-subs-modal {
     display: flex;
     justify-content: center;
@@ -122,7 +126,7 @@ function updateVisible () {
     const um = document.querySelector('#myUL')
     const m = Array.from(um.querySelectorAll('li'))
     const vis = []
-    $("#kes-omni li:visible").each(function() {
+    $("#kes-omni li:visible").each(function () {
         vis.push($(this)[0])
     })
     for (j = 0; j < vis.length; ++j) {
@@ -133,11 +137,11 @@ function updateVisible () {
     makeInactive(vis[pos]);
     return [vis, pos]
 }
-function makeInactive(name){
+function makeInactive (name) {
     const c = kesActive;
     name.classList.remove(c);
 }
-function makeActive(name){
+function makeActive (name) {
     const c = kesActive;
     name.classList.add(c);
 }
@@ -158,30 +162,30 @@ function omni (subs) {
     let pos = 0
     search.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
-            case 40: {
-                e.preventDefault();
-                let packed = updateVisible();
-                let vis = packed[0]
-                let pos = packed[1]
-                pos = ++pos
-                if (pos >= vis.length) {
-                    pos = 0
-                }
-                makeActive(vis[pos]);
-                break;
+        case 40: {
+            e.preventDefault();
+            let packed = updateVisible();
+            let vis = packed[0]
+            let pos = packed[1]
+            pos = ++pos
+            if (pos >= vis.length) {
+                pos = 0
             }
-            case 38: {
-                e.preventDefault();
-                let packed = updateVisible();
-                let vis = packed[0]
-                let pos = packed[1]
-                pos = --pos
-                if (pos < 0) {
-                    pos = (vis.length - 1)
-                }
-                makeActive(vis[pos])
-                break;
+            makeActive(vis[pos]);
+            break;
+        }
+        case 38: {
+            e.preventDefault();
+            let packed = updateVisible();
+            let vis = packed[0]
+            let pos = packed[1]
+            pos = --pos
+            if (pos < 0) {
+                pos = (vis.length - 1)
             }
+            makeActive(vis[pos])
+            break;
+        }
         }
     });
     search.addEventListener("keyup", (e) => {
@@ -230,6 +234,10 @@ function omni (subs) {
     entryholder.id = 'myUL'
     const innerholder = document.createElement('div')
     innerholder.id = 'kes-omni'
+    const label = document.createElement('div')
+    label.innerText = 'logged in'
+    label.id = 'kes-omni-warning'
+    innerholder.appendChild(label);
     innerholder.appendChild(search);
     for (let i = 0; i <subs.length; ++i) {
         let outerA = document.createElement('a')
