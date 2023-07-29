@@ -14,16 +14,20 @@
 
 //TODO: if mod is on, cache subs and set listener
 //TODO: GM. API xhr request
-//search bar must be sticky
+//TODO: search bar must be sticky
 //scroll elements into view if beyond geometry
-//
 
 //d = document.querySelector('#kes-omni').offsetHeight
 //my.getBoundingClientRect().bottom
+//scrollIntoView();
 
 const kesActive = 'kes-subs-active'
 
 const modCss = `
+#kes-omni-scroller {
+    height: 80%;
+    overflow-y: scroll;
+}
 #kes-omni-warning {
     background-color: red;
     text-align: center;
@@ -50,7 +54,6 @@ const listCss = `
 #kes-omni {
     margin-top: 20%;
     height: 80%;
-    overflow-y: scroll;
 }
 #kes-omni-list {
     height: 80%;
@@ -163,6 +166,27 @@ function makeActive (name) {
     const c = kesActive;
     name.classList.add(c);
 }
+function scrollList (direction, el) {
+    const active = '.kes-subs-active'
+    const scroll = '#kes-omni-scroller'
+    let currentElGeom;
+    let scrollerGeom;
+    if (direction === 'down') {
+        currentElGeom = document.querySelector(active).getBoundingClientRect().bottom
+        scrollerGeom = document.querySelector(scroll).getBoundingClientRect().bottom
+        if ((currentElGeom > scrollerGeom) || (currentElGeom < 0)) {
+            el.scrollIntoView();
+        }
+    } else {
+        currentElGeom = document.querySelector(active).getBoundingClientRect().top;
+        const currentElGeomBot = document.querySelector(active).getBoundingClientRect().bottom;
+        scrollerGeom = document.querySelector(scroll).getBoundingClientRect().top;
+        const scrollerGeomBot = document.querySelector(scroll).getBoundingClientRect().bottom;
+        if ((currentElGeom < scrollerGeom) || (currentElGeomBot > scrollerGeomBot)) {
+            el.scrollIntoView();
+        }
+    }
+}
 function omni (subs) {
     const kesModal = document.createElement('div')
     kesModal.className = "kes-subs-modal"
@@ -189,7 +213,8 @@ function omni (subs) {
                 pos = 0
             }
             makeActive(vis[pos]);
-            //vis[pos].focus();
+            scrollList('down', vis[pos]);
+
             break;
         }
         case 38: {
@@ -201,8 +226,8 @@ function omni (subs) {
             if (pos < 0) {
                 pos = (vis.length - 1)
             }
-            makeActive(vis[pos])
-            //vis[pos].focus();
+            makeActive(vis[pos]);
+            scrollList('up', vis[pos]);
             break;
         }
         }
@@ -263,6 +288,8 @@ function omni (subs) {
     }
 
     innerholder.appendChild(search);
+    const scroller = document.createElement('div');
+    scroller.id = 'kes-omni-scroller';
     for (let i = 0; i <subs.length; ++i) {
         let outerA = document.createElement('a')
         let entry = document.createElement('li');
@@ -272,8 +299,9 @@ function omni (subs) {
         entry.innerText = subs[i];
         outerA.appendChild(entry)
         outerA.href = 'https://kbin.social/m/' + subs[i]
-        innerholder.appendChild(outerA);
+        scroller.appendChild(outerA);
     }
+    innerholder.appendChild(scroller)
     entryholder.appendChild(innerholder)
     kesModal.appendChild(entryholder)
     innerholder.addEventListener('mouseover', (e) => {
