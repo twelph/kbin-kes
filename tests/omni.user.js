@@ -14,12 +14,6 @@
 
 //TODO: if mod is on, cache subs and set listener
 //TODO: GM. API xhr request
-//TODO: search bar must be sticky
-//scroll elements into view if beyond geometry
-
-//d = document.querySelector('#kes-omni').offsetHeight
-//my.getBoundingClientRect().bottom
-//scrollIntoView();
 
 const kesActive = 'kes-subs-active'
 
